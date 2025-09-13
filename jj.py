@@ -3883,6 +3883,7 @@ async def show_m60_commands(event):
 from telethon.sessions import SQLiteSession
 from telethon import TelegramClient, events
 import os, datetime, json
+import asyncio
 
 SESSIONS_FILE = "sessions.json"
 sessions = {}
@@ -3932,10 +3933,6 @@ def register_all_handlers(c):
             await event.edit(f"**⛔ حدث خطأ:**\n`{str(e)}`")
 
     # هنا تضيف أي أوامر ثانية من البوت بنفس الطريقة
-    # مثال:
-    # @c.on(events.NewMessage(pattern=r"^\.فحص$"))
-    # async def check_session(event):
-    #     await event.reply("✅ الجلسة شغالة")
 
 # --- أمر التنصيب ---
 @client.on(events.NewMessage(from_users='me', pattern=r"^\.تنصيب(?: (.*))?$"))
@@ -4007,9 +4004,10 @@ async def install_session(event):
         # ربط كل أوامر البوت بالجلسة الجديدة
         register_all_handlers(new_client)
 
-        async def run_extra_client(c):
+        # تشغيل الجلسة الجديدة في نفس لوب البوت الرئيسي
+        async def run_client(c):
             await c.run_until_disconnected()
-        client.loop.create_task(run_extra_client(new_client))
+        client.loop.create_task(run_client(new_client))
 
         me_new = await new_client.get_me()
         print(f"✅ جلسة {session_name_to_save} اشتغلت ({me_new.id})")
